@@ -1,0 +1,27 @@
+-- Crear la base de datos para el microservicio de pedidos
+DROP DATABASE IF EXISTS bd_api_pedidos;
+CREATE DATABASE bd_api_pedidos;
+
+-- Conectar a la base de datos recién creada
+\c bd_api_pedidos;
+
+-- Crear la tabla pedidos
+CREATE TABLE pedidos (
+    id_pedido SERIAL PRIMARY KEY,
+    cliente VARCHAR(100) NOT NULL,
+    fecha DATE NOT NULL,
+    estado VARCHAR(50) NOT NULL
+);
+
+-- Crear la tabla detalle_pedido, relacionada con pedidos
+CREATE TABLE detalle_pedido (
+    id_detalle SERIAL PRIMARY KEY,
+    id_pedido INT REFERENCES pedidos(id_pedido) ON DELETE CASCADE,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10, 2) NOT NULL
+);
+
+-- Ejemplo de inserciones iniciales (opcional)
+INSERT INTO pedidos (cliente, fecha, estado) VALUES ('Juan Perez', CURRENT_DATE, 'Pendiente');
+INSERT INTO detalle_pedido (id_pedido, producto_id, cantidad, precio_unitario) VALUES (1, 101, 2, 500.00);
