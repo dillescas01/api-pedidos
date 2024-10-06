@@ -10,17 +10,20 @@ import (
     _ "github.com/lib/pq"
 )
 
+// Estructura de Pedido
 type Pedido struct {
     Cliente  string        `json:"cliente"`
     Detalles []DetallePedido `json:"detalles"`
 }
 
+// Estructura de DetallePedido
 type DetallePedido struct {
     ProductoID    int     `json:"producto_id"`
     Cantidad      int     `json:"cantidad"`
     PrecioUnitario float64 `json:"precio_unitario"`
 }
 
+// Estructura de Producto
 type Producto struct {
     ID        int     `json:"id"`
     Nombre    string  `json:"nombre"`
@@ -28,9 +31,27 @@ type Producto struct {
     Precio    float64 `json:"precio"`
 }
 
+// Estructura para la respuesta del echo test
+type Message struct {
+    Message string `json:"message"`
+}
+
 func main() {
+    // Ruta para el echo test
+    http.HandleFunc("/", getEchoTest)
+
+    // Ruta para crear pedidos
     http.HandleFunc("/pedidos", crearPedido)
-    log.Fatal(http.ListenAndServe(":8080", nil))
+
+    // Levantar el servidor en el puerto 8001
+    log.Fatal(http.ListenAndServe(":8001", nil))
+}
+
+// Función para el echo test (health check)
+func getEchoTest(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    response := Message{Message: "Echo Test OK"}
+    json.NewEncoder(w).Encode(response)
 }
 
 // Función para crear pedidos
@@ -50,7 +71,7 @@ func crearPedido(w http.ResponseWriter, r *http.Request) {
     }
     defer db.Close()
 
-    // Verificar el inventario de cada producto llamando al microservicio de productos
+    // Verificar el inventario de cada producto llamando al microservicio de productos en el puerto 8000
     for _, detalle := range pedido.Detalles {
         producto, err := obtenerProducto(detalle.ProductoID)
         if err != nil {
@@ -91,7 +112,8 @@ func crearPedido(w http.ResponseWriter, r *http.Request) {
 
 // Función para obtener detalles del producto desde el microservicio de productos
 func obtenerProducto(productoID int) (Producto, error) {
-    url := fmt.Sprintf("http://productos:5000/productos/%d", productoID)
+    // Cambiado a localhost:8000 porque productos corre en ese puerto
+    url := fmt.Sprintf("http://localhost:8000/productos/%d", productoID)
     resp, err := http.Get(url)
     if err != nil {
         return Producto{}, err
@@ -114,7 +136,8 @@ func obtenerProducto(productoID int) (Producto, error) {
 
 // Función para actualizar el inventario del producto en el microservicio de productos
 func actualizarInventario(productoID, cantidad int) error {
-    url := fmt.Sprintf("http://productos:5000/productos/%d/actualizar_inventario", productoID)
+    // Cambiado a localhost:8000 porque productos corre en ese puerto
+    url := fmt.Sprintf("http://localhost:8000/productos/%d/actualizar_inventario", productoID)
     reqBody, _ := json.Marshal(map[string]int{
         "cantidad": cantidad,
     })
