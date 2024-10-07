@@ -14,8 +14,8 @@ COPY . .
 # Compilar la aplicación
 RUN go build -o api-pedidos
 
-# Exponer el puerto 8080
-EXPOSE 8080
+# Exponer el puerto 8001
+EXPOSE 8001
 
 # Comando para ejecutar la aplicación
 CMD ["/programas/api-pedidos"]

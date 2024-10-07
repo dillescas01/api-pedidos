@@ -65,7 +65,7 @@ func crearPedido(w http.ResponseWriter, r *http.Request) {
     }
 
     // Conectar a la base de datos PostgreSQL
-    connStr := "user=tu_usuario dbname=bd_api_pedidos password=tu_contraseña host=localhost sslmode=disable"
+    connStr := "user=postgres dbname=bd_api_pedidos password=utec host=98.82.74.138 sslmode=disable"
     db, err := sql.Open("postgres", connStr)
     if err != nil {
         log.Fatal(err)
@@ -114,7 +114,7 @@ func crearPedido(w http.ResponseWriter, r *http.Request) {
 // Función para obtener detalles del producto desde el microservicio de productos
 func obtenerProducto(productoID int) (Producto, error) {
     // Cambiado a localhost:8000 porque productos corre en ese puerto
-    url := fmt.Sprintf("http://localhost:8000/productos/%d", productoID)
+    url := fmt.Sprintf("http://98.82.74.138:8000/productos/%d", productoID)
     resp, err := http.Get(url)
     if err != nil {
         return Producto{}, err
@@ -138,7 +138,7 @@ func obtenerProducto(productoID int) (Producto, error) {
 // Función para actualizar el inventario del producto en el microservicio de productos
 func actualizarInventario(productoID, cantidad int) error {
     // Cambiado a localhost:8000 porque productos corre en ese puerto
-    url := fmt.Sprintf("http://localhost:8000/productos/%d/actualizar_inventario", productoID)
+    url := fmt.Sprintf("http://98.82.74.138:8000/productos/%d/actualizar_inventario", productoID)
     reqBody, _ := json.Marshal(map[string]int{
         "cantidad": cantidad,
     })
