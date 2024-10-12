@@ -113,7 +113,6 @@ func crearPedido(w http.ResponseWriter, r *http.Request) {
 
 // Función para obtener detalles del producto desde el microservicio de productos
 func obtenerProducto(productoID int) (Producto, error) {
-    // Cambiado a localhost:8000 porque productos corre en ese puerto
     url := fmt.Sprintf("http://productos:8000/productos/%d", productoID)
     resp, err := http.Get(url)
     if err != nil {
@@ -121,19 +120,22 @@ func obtenerProducto(productoID int) (Producto, error) {
     }
     defer resp.Body.Close()
 
-    var producto Producto
+    var productoResponse struct {
+        Producto Producto `json:"producto"`
+    }
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
         return Producto{}, err
     }
 
-    err = json.Unmarshal(body, &producto)
+    err = json.Unmarshal(body, &productoResponse)
     if err != nil {
         return Producto{}, err
     }
 
-    return producto, nil
+    return productoResponse.Producto, nil
 }
+
 
 // Función para actualizar el inventario del producto en el microservicio de productos
 func actualizarInventario(productoID, cantidad int) error {
