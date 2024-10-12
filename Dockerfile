@@ -4,8 +4,8 @@ FROM golang:1.20-alpine
 # Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /programas
 
-# Copiar go.mod e instalar dependencias (genera go.sum automáticamente)
-COPY go.mod ./
+# Copiar go.mod y go.sum e instalar dependencias
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copiar el código fuente
