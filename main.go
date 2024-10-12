@@ -51,6 +51,8 @@ func main() {
 	r.HandleFunc("/pedidos", crearPedido).Methods("POST")
 	r.HandleFunc("/pedidos", obtenerTodosPedidos).Methods("GET")
 	r.HandleFunc("/pedidos/{id}", obtenerPedido).Methods("GET")
+	r.HandleFunc("/pedidos/{id}", actualizarPedido).Methods("PUT")
+	r.HandleFunc("/pedidos/{id}", eliminarPedido).Methods("DELETE")
 
 	// Levantar el servidor en el puerto 8001
 	log.Fatal(http.ListenAndServe(":8001", r))
@@ -72,7 +74,6 @@ func crearPedido(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Conectar a la base de datos PostgreSQL
 	connStr := "user=postgres dbname=bd_api_pedidos password=utec host=98.82.74.138 sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -164,7 +165,7 @@ func actualizarInventario(productoID, cantidad int) error {
 	return nil
 }
 
-// Nuevo endpoint para obtener un pedido por ID
+// Función para obtener un pedido por ID
 func obtenerPedido(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idPedido, err := strconv.Atoi(vars["id"])
@@ -208,7 +209,7 @@ func obtenerPedido(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(pedido)
 }
 
-// Nuevo endpoint para obtener todos los pedidos
+// Función para obtener todos los pedidos
 func obtenerTodosPedidos(w http.ResponseWriter, r *http.Request) {
 	connStr := "user=postgres dbname=bd_api_pedidos password=utec host=98.82.74.138 sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
@@ -234,7 +235,6 @@ func obtenerTodosPedidos(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Obtener detalles del pedido
 		detalleRows, err := db.Query("SELECT producto_id, cantidad, precio_unitario FROM detalle_pedido WHERE id_pedido = $1", pedido.ID)
 		if err != nil {
 			http.Error(w, "Error al obtener detalles del pedido", http.StatusInternalServerError)
@@ -256,4 +256,71 @@ func obtenerTodosPedidos(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(pedidos)
+}
+
+// Función para actualizar un pedido
+func actualizarPedido(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idPedido, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID de pedido inválido", http.StatusBadRequest)
+		return
+	}
+
+	var pedido Pedido
+	err = json.NewDecoder(r.Body).Decode(&pedido)
+	if err != nil {
+		http.Error(w, "Formato de datos incorrecto", http.StatusBadRequest)
+		return
+	}
+
+	connStr := "user=postgres dbname=bd_api_pedidos password=utec host=98.82.74.138 sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		http.Error(w, "Error al conectar con la base de datos", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE pedidos SET estado = $1 WHERE id_pedido = $2", pedido.Estado, idPedido)
+	if err != nil {
+		http.Error(w, "Error al actualizar el pedido", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Pedido actualizado con ID: %d", idPedido)
+}
+
+// Función para eliminar un pedido
+func eliminarPedido(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idPedido, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID de pedido inválido", http.StatusBadRequest)
+		return
+	}
+
+	connStr := "user=postgres dbname=bd_api_pedidos password=utec host=98.82.74.138 sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		http.Error(w, "Error al conectar con la base de datos", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DELETE FROM detalle_pedido WHERE id_pedido = $1", idPedido)
+	if err != nil {
+		http.Error(w, "Error al eliminar detalles del pedido", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM pedidos WHERE id_pedido = $1", idPedido)
+	if err != nil {
+		http.Error(w, "Error al eliminar el pedido", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Pedido eliminado con ID: %d", idPedido)
 }
