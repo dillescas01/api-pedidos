@@ -1,10 +1,10 @@
 # Usar una imagen oficial de Go
 FROM golang:1.20-alpine
 
-# Establecer directorio de trabajo
+# Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /programas
 
-# Copiar go.mod y go.sum e instalar dependencias
+# Copiar go.mod e instalar dependencias (genera go.sum automáticamente)
 COPY go.mod ./
 RUN go mod download
 
